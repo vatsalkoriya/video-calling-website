@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
     Mic, MicOff, Video, VideoOff,
     MonitorUp, MessageSquare, Users, PhoneOff,
@@ -8,20 +9,28 @@ import {
 import { useLocalParticipant } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 
+import SettingsModal from './SettingsModal';
+
 interface ControlBarProps {
+    roomId: string;
     onToggleChat: () => void;
     onToggleParticipants: () => void;
     isChatOpen: boolean;
     isParticipantsOpen: boolean;
     onLeave: () => void;
+    atmosphere: string;
+    onAtmosphereChange: (atmosphere: string) => void;
 }
 
 export default function ControlBar({
+    roomId,
     onToggleChat,
     onToggleParticipants,
     isChatOpen,
     isParticipantsOpen,
-    onLeave
+    onLeave,
+    atmosphere,
+    onAtmosphereChange
 }: ControlBarProps) {
     const {
         isMicrophoneEnabled,
@@ -30,11 +39,32 @@ export default function ControlBar({
         localParticipant,
     } = useLocalParticipant();
 
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    const copyMeetingCode = () => {
+        navigator.clipboard.writeText(roomId);
+        // You could add a toast here
+    };
+
     return (
         <div className="h-20 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-6">
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                currentAtmosphere={atmosphere}
+                onAtmosphereChange={onAtmosphereChange}
+            />
+
             {/* Left side: Meeting Info */}
-            <div className="flex items-center gap-2 text-white">
-                <span className="font-medium text-sm">Meeting Details</span>
+            <div className="flex items-center gap-4 text-white">
+                <div className="flex flex-col">
+                    <span className="font-semibold text-sm">Meeting Room</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 font-mono bg-gray-800 px-2 py-1 rounded select-all cursor-pointer hover:bg-gray-700 transition-colors" title="Click to copy" onClick={copyMeetingCode}>
+                            {roomId}
+                        </span>
+                    </div>
+                </div>
                 <ChevronUp size={16} className="text-gray-400" />
             </div>
 
@@ -105,7 +135,10 @@ export default function ControlBar({
                     {isChatOpen && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />}
                 </button>
 
-                <button className="p-3 text-gray-400 hover:text-white transition-colors">
+                <button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="p-3 text-gray-400 hover:text-white transition-colors"
+                >
                     <Settings size={20} />
                 </button>
             </div>

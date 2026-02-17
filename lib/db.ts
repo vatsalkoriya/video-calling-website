@@ -1,10 +1,14 @@
 import mongoose from 'mongoose';
 
+import User from '@/models/User';
+import Room from '@/models/Room';
+import Message from '@/models/Message';
+
+// Keep references to models to prevent tree-shaking
+const models = { User, Room, Message };
+
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-}
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -27,6 +31,10 @@ if (!global.mongoose) {
 }
 
 async function connectDB(): Promise<typeof mongoose> {
+  if (!MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+  }
+
   if (cached.conn) {
     return cached.conn;
   }

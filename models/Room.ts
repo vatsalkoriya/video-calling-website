@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { nanoid } from 'nanoid';
+import './User';
 
 export interface IRoom extends Document {
     roomId: string;

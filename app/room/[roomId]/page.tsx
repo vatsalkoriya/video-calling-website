@@ -1,11 +1,13 @@
 import MeetingRoom from '@/components/meeting/MeetingRoom';
 
 interface RoomPageProps {
-    params: {
+    params: Promise<{
         roomId: string;
-    };
+    }>;
 }
 
-export default function RoomPage({ params }: RoomPageProps) {
-    return <MeetingRoom roomId={params.roomId} />;
+export default async function RoomPage({ params }: RoomPageProps) {
+    const { roomId } = await params;
+    return <MeetingRoom roomId={roomId} />;
 }
+

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Room from '@/models/Room';
+import User from '@/models/User';
 import { authenticate } from '@/middleware/authMiddleware';
 
 export async function POST(request: NextRequest) {
