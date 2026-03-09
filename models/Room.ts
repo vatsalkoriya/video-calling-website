@@ -1,11 +1,10 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { nanoid } from 'nanoid';
-import './User';
 
 export interface IRoom extends Document {
     roomId: string;
-    hostId: mongoose.Types.ObjectId;
-    participants: mongoose.Types.ObjectId[];
+    hostId: string;
+    participants: string[];
     createdAt: Date;
     isActive: boolean;
 }
@@ -18,14 +17,12 @@ const RoomSchema: Schema<IRoom> = new Schema({
         default: () => nanoid(10), // Generate unique 10-character room ID
     },
     hostId: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
+        type: String,
         required: true,
     },
     participants: [
         {
-            type: Schema.Types.ObjectId,
-            ref: 'User',
+            type: String,
         },
     ],
     createdAt: {

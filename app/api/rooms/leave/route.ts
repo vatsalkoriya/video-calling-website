@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Room from '@/models/Room';
-import { authenticate } from '@/middleware/authMiddleware';
+import { authenticate } from '@/lib/clerk-auth';
 
 export async function POST(request: NextRequest) {
     try {
         // Authenticate user
-        const authResult = await authenticate(request);
+        const authResult = await authenticate();
         if (authResult instanceof NextResponse) {
             return authResult; // Return error response
         }
@@ -57,10 +57,10 @@ export async function POST(request: NextRequest) {
             },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Room leave error:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to leave room' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to leave room' },
             { status: 500 }
         );
     }

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuth } from '@clerk/nextjs';
 import { useRoomStore } from '@/store/useRoomStore';
 import VideoGrid from './VideoGrid';
 import ControlBar from './ControlBar';
@@ -17,8 +17,7 @@ interface MeetingRoomProps {
 
 export default function MeetingRoom({ roomId }: MeetingRoomProps) {
     const router = useRouter();
-    const token = useAuthStore((state) => state.token);
-    const user = useAuthStore((state) => state.user);
+    const { isLoaded, isSignedIn } = useAuth();
     const clearRoom = useRoomStore((state) => state.clearRoom);
 
     const [livekitToken, setLivekitToken] = useState<string>('');
@@ -41,22 +40,12 @@ export default function MeetingRoom({ roomId }: MeetingRoomProps) {
 
     const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || '';
 
-    useEffect(() => {
-        if (!token || !user) {
-            router.push('/');
-            return;
-        }
-
-        fetchLiveKitToken();
-    }, [roomId, token, user]);
-
-    const fetchLiveKitToken = async () => {
+    const fetchLiveKitToken = useCallback(async () => {
         try {
             const response = await fetch('/api/token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ roomId }),
             });
@@ -69,12 +58,25 @@ export default function MeetingRoom({ roomId }: MeetingRoomProps) {
 
             setLivekitToken(data.data.token);
             setIsHost(data.data.isHost);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to get token');
         } finally {
             setLoading(false);
         }
-    };
+    }, [roomId]);
+
+    useEffect(() => {
+        if (!isLoaded) {
+            return;
+        }
+
+        if (!isSignedIn) {
+            router.push('/sign-in');
+            return;
+        }
+
+        fetchLiveKitToken();
+    }, [fetchLiveKitToken, isLoaded, isSignedIn, router]);
 
     useEffect(() => {
         const checkPermissions = async () => {
@@ -82,9 +84,12 @@ export default function MeetingRoom({ roomId }: MeetingRoomProps) {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 // Stop the tracks immediately as we just wanted to check permission
                 stream.getTracks().forEach(track => track.stop());
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('Permission check error:', err);
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                if (
+                    err instanceof DOMException &&
+                    (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+                ) {
                     setPermissionError(true);
                 }
             }

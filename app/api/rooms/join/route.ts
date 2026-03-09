@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Room from '@/models/Room';
-import User from '@/models/User';
-import { authenticate } from '@/middleware/authMiddleware';
+import { authenticate } from '@/lib/clerk-auth';
 
 export async function POST(request: NextRequest) {
     try {
         // Authenticate user
-        const authResult = await authenticate(request);
+        const authResult = await authenticate();
         if (authResult instanceof NextResponse) {
             return authResult; // Return error response
         }
@@ -42,13 +41,20 @@ export async function POST(request: NextRequest) {
 
         if (!isAlreadyParticipant) {
             // Add user to participants
-            room.participants.push(user.userId as any);
+            room.participants.push(user.userId);
             await room.save();
         }
 
-        // Populate host and participants
-        await room.populate('hostId', 'name email');
-        await room.populate('participants', 'name email');
+        const participantViews = room.participants.map((participantId) => {
+            const isCurrentUser = participantId === user.userId;
+            return {
+                id: participantId,
+                name: isCurrentUser ? user.name : 'Participant',
+                email: isCurrentUser ? user.email : '',
+            };
+        });
+
+        const isCurrentUserHost = room.hostId === user.userId;
 
         return NextResponse.json(
             {
@@ -58,15 +64,11 @@ export async function POST(request: NextRequest) {
                         id: room._id,
                         roomId: room.roomId,
                         host: {
-                            id: room.hostId._id,
-                            name: (room.hostId as any).name,
-                            email: (room.hostId as any).email,
+                            id: room.hostId,
+                            name: isCurrentUserHost ? user.name : 'Host',
+                            email: isCurrentUserHost ? user.email : '',
                         },
-                        participants: (room.participants as any[]).map((p) => ({
-                            id: p._id,
-                            name: p.name,
-                            email: p.email,
-                        })),
+                        participants: participantViews,
                         createdAt: room.createdAt,
                         isActive: room.isActive,
                     },
@@ -74,10 +76,10 @@ export async function POST(request: NextRequest) {
             },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Room join error:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to join room' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to join room' },
             { status: 500 }
         );
     }

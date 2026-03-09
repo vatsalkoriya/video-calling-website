@@ -1,83 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
-import LoginForm from '@/components/auth/LoginForm';
-import RegisterForm from '@/components/auth/RegisterForm';
+import { SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
 import CreateRoomModal from '@/components/room/CreateRoomModal';
 import JoinRoomModal from '@/components/room/JoinRoomModal';
-
+import Navbar from '@/components/Navbar';
 export default function HomePage() {
-  const router = useRouter();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isSignedIn } = useUser();
 
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [showJoinRoom, setShowJoinRoom] = useState(false);
-
-  const handleAuthSuccess = () => {
-    setShowLogin(false);
-    setShowRegister(false);
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                LiveMeet
-              </h1>
-            </div>
-
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Welcome, <span className="font-semibold text-gray-900 dark:text-white">{user?.name}</span>
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowLogin(true)}
-                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setShowRegister(true)}
-                  className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all"
-                >
-                  Sign Up
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {isAuthenticated ? (
+        {isSignedIn ? (
           <div className="text-center">
             <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Video Meetings Made Simple
@@ -154,42 +95,22 @@ export default function HomePage() {
               Sign in or create an account to start your video conferencing experience
             </p>
 
-            {showLogin && !showRegister && (
-              <LoginForm
-                onSuccess={handleAuthSuccess}
-                onSwitchToRegister={() => {
-                  setShowLogin(false);
-                  setShowRegister(true);
-                }}
-              />
-            )}
-
-            {showRegister && !showLogin && (
-              <RegisterForm
-                onSuccess={handleAuthSuccess}
-                onSwitchToLogin={() => {
-                  setShowRegister(false);
-                  setShowLogin(true);
-                }}
-              />
-            )}
-
-            {!showLogin && !showRegister && (
               <div className="flex gap-4 justify-center">
+                <SignInButton mode="modal">
                 <button
-                  onClick={() => setShowLogin(true)}
                   className="px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-900 dark:text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
                 >
                   Sign In
                 </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
                 <button
-                  onClick={() => setShowRegister(true)}
                   className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all"
                 >
                   Get Started
                 </button>
+                </SignUpButton>
               </div>
-            )}
           </div>
         )}
       </main>

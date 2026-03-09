@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useRoomStore } from '@/store/useRoomStore';
 
 interface CreateRoomModalProps {
@@ -12,7 +11,6 @@ interface CreateRoomModalProps {
 
 export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
     const router = useRouter();
-    const token = useAuthStore((state) => state.token);
     const setCurrentRoom = useRoomStore((state) => state.setCurrentRoom);
 
     const [loading, setLoading] = useState(false);
@@ -27,7 +25,6 @@ export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProp
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
             });
 
@@ -39,8 +36,8 @@ export default function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProp
 
             setCurrentRoom(data.data.room);
             router.push(`/room/${data.data.room.roomId}`);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to create room');
         } finally {
             setLoading(false);
         }

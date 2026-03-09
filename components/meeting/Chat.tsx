@@ -1,33 +1,35 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useChat, useLocalParticipant } from '@livekit/components-react';
-import { Send, User as UserIcon } from 'lucide-react';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useChat } from '@livekit/components-react';
+import { Send } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
 
 interface ChatProps {
     roomId: string;
 }
 
+interface HistoryMessage {
+    _id: string;
+    senderId: string;
+    senderName: string;
+    message: string;
+    timestamp: string;
+}
+
 export default function Chat({ roomId }: ChatProps) {
     const { chatMessages, send } = useChat();
-    const { localParticipant } = useLocalParticipant();
-    const token = useAuthStore((state) => state.token);
-    const user = useAuthStore((state) => state.user);
+    const { user } = useUser();
 
     const [message, setMessage] = useState('');
-    const [history, setHistory] = useState<any[]>([]);
+    const [history, setHistory] = useState<HistoryMessage[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Fetch chat history from MongoDB on join
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await fetch(`/api/messages?roomId=${roomId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const response = await fetch(`/api/messages?roomId=${roomId}`);
                 const data = await response.json();
                 if (data.success) {
                     setHistory(data.data.messages);
@@ -37,8 +39,8 @@ export default function Chat({ roomId }: ChatProps) {
             }
         };
 
-        if (token) fetchHistory();
-    }, [roomId, token]);
+        fetchHistory();
+    }, [roomId]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -60,7 +62,6 @@ export default function Chat({ roomId }: ChatProps) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     roomId,

@@ -1,9 +1,8 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import './User';
 
 export interface IMessage extends Document {
     roomId: string;
-    senderId: mongoose.Types.ObjectId;
+    senderId: string;
     senderName: string;
     message: string;
     timestamp: Date;
@@ -16,8 +15,7 @@ const MessageSchema: Schema<IMessage> = new Schema({
         index: true, // Index for faster queries
     },
     senderId: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
+        type: String,
         required: true,
     },
     senderName: {

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useRoomStore } from '@/store/useRoomStore';
 
 interface JoinRoomModalProps {
@@ -12,7 +11,6 @@ interface JoinRoomModalProps {
 
 export default function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
     const router = useRouter();
-    const token = useAuthStore((state) => state.token);
     const setCurrentRoom = useRoomStore((state) => state.setCurrentRoom);
 
     const [roomId, setRoomId] = useState('');
@@ -29,7 +27,6 @@ export default function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ roomId: roomId.trim() }),
             });
@@ -42,8 +39,8 @@ export default function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
 
             setCurrentRoom(data.data.room);
             router.push(`/room/${roomId.trim()}`);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to join room');
         } finally {
             setLoading(false);
         }

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Message from '@/models/Message';
-import { authenticate } from '@/middleware/authMiddleware';
+import { authenticate } from '@/lib/clerk-auth';
 
 // Get messages for a room
 export async function GET(request: NextRequest) {
     try {
-        const authResult = await authenticate(request);
+        const authResult = await authenticate();
         if (authResult instanceof NextResponse) {
             return authResult;
         }
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
             },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Get messages error:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to get messages' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to get messages' },
             { status: 500 }
         );
     }
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 // Save a message
 export async function POST(request: NextRequest) {
     try {
-        const authResult = await authenticate(request);
+        const authResult = await authenticate();
         if (authResult instanceof NextResponse) {
             return authResult;
         }
@@ -81,10 +81,10 @@ export async function POST(request: NextRequest) {
             },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Save message error:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to save message' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to save message' },
             { status: 500 }
         );
     }

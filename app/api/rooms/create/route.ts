@@ -1,13 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Room from '@/models/Room';
-import User from '@/models/User';
-import { authenticate } from '@/middleware/authMiddleware';
+import { authenticate } from '@/lib/clerk-auth';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     try {
         // Authenticate user
-        const authResult = await authenticate(request);
+        const authResult = await authenticate();
         if (authResult instanceof NextResponse) {
             return authResult; // Return error response
         }
@@ -21,9 +20,6 @@ export async function POST(request: NextRequest) {
             participants: [user.userId],
         });
 
-        // Populate host information
-        await room.populate('hostId', 'name email');
-
         return NextResponse.json(
             {
                 success: true,
@@ -32,11 +28,17 @@ export async function POST(request: NextRequest) {
                         id: room._id,
                         roomId: room.roomId,
                         host: {
-                            id: room.hostId._id,
-                            name: (room.hostId as any).name,
-                            email: (room.hostId as any).email,
+                            id: user.userId,
+                            name: user.name,
+                            email: user.email,
                         },
-                        participants: room.participants,
+                        participants: [
+                            {
+                                id: user.userId,
+                                name: user.name,
+                                email: user.email,
+                            },
+                        ],
                         createdAt: room.createdAt,
                         isActive: room.isActive,
                     },
@@ -44,10 +46,10 @@ export async function POST(request: NextRequest) {
             },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Room creation error:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to create room' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to create room' },
             { status: 500 }
         );
     }
