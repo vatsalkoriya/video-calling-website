@@ -28,3 +28,7 @@
     text-wrap: balance;
   }
 }
+
+.auth-shell .cl-footer {
+  display: none !important;
+}

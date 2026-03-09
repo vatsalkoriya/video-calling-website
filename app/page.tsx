@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
+import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 import CreateRoomModal from '@/components/room/CreateRoomModal';
 import JoinRoomModal from '@/components/room/JoinRoomModal';
 import Navbar from '@/components/Navbar';
@@ -96,20 +97,18 @@ export default function HomePage() {
             </p>
 
               <div className="flex gap-4 justify-center">
-                <SignInButton mode="modal">
-                <button
+                <Link
+                  href="/sign-in"
                   className="px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-900 dark:text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
                 >
                   Sign In
-                </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                <button
+                </Link>
+                <Link
+                  href="/sign-up"
                   className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all"
                 >
                   Get Started
-                </button>
-                </SignUpButton>
+                </Link>
               </div>
           </div>
         )}
